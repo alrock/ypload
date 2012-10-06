@@ -13,7 +13,7 @@ def main():
 
     try:
         key = ydisk.getKey(YD_APP_ID, YD_APP_SECRET, KEY_FILE)
-    except Exception, e:
+    except:
         key = None
 
     while not key or not ydisk.LoginAPI(key).getInfo():
@@ -24,8 +24,7 @@ def main():
                 os.remove(KEY_FILE)
             try:
                 key = ydisk.getKey(YD_APP_ID, YD_APP_SECRET, KEY_FILE)
-            except Exception, e:
-                # sys.stderr.write('Unknown problem: %s' % e)
+            except:
                 pass
         else:
             sys.exit(-5)
