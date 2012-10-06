@@ -4,12 +4,32 @@ import ydisk
 
 YD_APP_ID = 'cb76e6135dc34947bcf7620e1ab62e54'
 YD_APP_SECRET = 'e4dba0141d734e1d89a5333c26a44f46'
+KEY_FILE = os.path.expanduser('~/.ypload-key')
 
 def main():
     if len(sys.argv) < 2:
         sys.stderr.write('No filename given\n')
         sys.exit(-2)
-    key = ydisk.getKey(YD_APP_ID, YD_APP_SECRET)
+
+    try:
+        key = ydisk.getKey(YD_APP_ID, YD_APP_SECRET, KEY_FILE)
+    except Exception, e:
+        key = None
+
+    while not key or not ydisk.LoginAPI(key).getInfo():
+        print "Something wrong with the authorization token"
+        answ = raw_input('Would you like to retry authentication? (y/N): ').strip().lower()
+        if answ in ['y', "yes"]:
+            if os.path.isfile(KEY_FILE):
+                os.remove(KEY_FILE)
+            try:
+                key = ydisk.getKey(YD_APP_ID, YD_APP_SECRET, KEY_FILE)
+            except Exception, e:
+                # sys.stderr.write('Unknown problem: %s' % e)
+                pass
+        else:
+            sys.exit(-5)
+
     api = ydisk.DiskAPI(key)
     api.mkdir('/JustShared')
 
