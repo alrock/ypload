@@ -35,8 +35,7 @@ class FileInfo(dict):
 
     __repr__    = __str__
 
-def getKey(YD_APP_ID, YD_APP_SECRET):
-    keyfile = os.path.expanduser('~/.ypload-key')
+def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     if os.path.isfile(keyfile):
         return open(keyfile, 'r').read()
     import webbrowser
