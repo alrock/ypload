@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ypload',
-    version='1.2.2',
+    version='1.2.3',
     description='Simple script to upload and publish files to Yandex.Disk',
     author='Grigory Bakunov',
     author_email='thebobuk@ya.ru',
