@@ -4,9 +4,9 @@ import os
 import requests, urlparse
 try:
     from pyxml2obj import XMLin
+    from dateutil.parser import parse as dateparse
 except:
     XMLin = None
-from dateutil.parser import parse as dateparse
 import json
 
 class FileInfo(dict):
@@ -78,7 +78,7 @@ class DiskAPI:
 
     def ls(self, directory='/'):
         if not XMLin:
-            raise Exception('You need to install pyxml2obj')
+            raise Exception('You need to install pyxml2obj and dateutil')
         rq = requests.request('PROPFIND', self.url(directory),
                 headers = {
                     'Authorization' : self.key,
@@ -100,7 +100,7 @@ class DiskAPI:
             )
         return rq.status_code == 201
 
-    def put(self, path, data):
+    def put(self, path, data, tp = 'application/binary'):
         dt = data
         rq = requests.request('PUT',
                 self.url(path),
@@ -109,7 +109,7 @@ class DiskAPI:
                     'Authorization' : self.key,
                     'Accept'           : '*/*',
                     'Expect'           : '100-continue',
-                    'Content-Type'     : 'application/binary',
+                    'Content-Type'     : tp,
                 }
             )
         return rq.status_code == 201
