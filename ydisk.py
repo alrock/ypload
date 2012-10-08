@@ -100,7 +100,7 @@ class DiskAPI:
             )
         return rq.status_code == 201
 
-    def put(self, path, data):
+    def put(self, path, data, tp = 'application/binary'):
         dt = data
         rq = requests.request('PUT',
                 self.url(path),
@@ -109,7 +109,7 @@ class DiskAPI:
                     'Authorization' : self.key,
                     'Accept'           : '*/*',
                     'Expect'           : '100-continue',
-                    'Content-Type'     : 'application/binary',
+                    'Content-Type'     : tp,
                 }
             )
         return rq.status_code == 201
