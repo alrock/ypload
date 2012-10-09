@@ -21,8 +21,10 @@ class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("Date", self.date_time_string())
         self.send_header("Server", self.version_string())
         self.end_headers()
-        self.wfile.write("Done. Please, return back to the terminal.\n")
+        self.wfile.write("<html><body>\n")
+        self.wfile.write("<script>var win = window.open('', '_self');win.close();</script>\n")
         self.wfile.write("Your code is %s" % YploadRequestHandler._code)
+        self.wfile.write("</body></html>\n")
         self.finish()
 
 
@@ -57,7 +59,7 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     if os.path.isfile(keyfile):
         return open(keyfile, 'r').read()
     import webbrowser
-    webbrowser.open('https://oauth.yandex.ru/authorize?response_type=code&client_id=' + YD_APP_ID)
+    webbrowser.open_new('https://oauth.yandex.ru/authorize?response_type=code&client_id=' + YD_APP_ID)
 
     YploadRequestHandler._code = None
     httpd = BaseHTTPServer.HTTPServer(('', 8714), YploadRequestHandler)
