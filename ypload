@@ -4,12 +4,8 @@ import os
 import ydisk
 import mimetypes
 
-# This changed to my due to return_uri settings which shall be
-# http://127.0.0.1:8714/
-# YD_APP_ID = 'cb76e6135dc34947bcf7620e1ab62e54'
-# YD_APP_SECRET = 'e4dba0141d734e1d89a5333c26a44f46'
-YD_APP_ID = '730164e4d68e4a5bb09707bb1d71dfa4'
-YD_APP_SECRET = 'de90eae718c74a81a8d9384dd31eb942'
+YD_APP_ID = 'cb76e6135dc34947bcf7620e1ab62e54'
+YD_APP_SECRET = 'e4dba0141d734e1d89a5333c26a44f46'
 KEY_FILE = os.path.expanduser('~/.ypload-key')
 
 
