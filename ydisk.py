@@ -20,6 +20,7 @@ class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("HTTP/1.0 200 OK")
         self.send_header("Date", self.date_time_string())
         self.send_header("Server", self.version_string())
+        self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.wfile.write("<html><body>\n")
         self.wfile.write("<script>var win = window.open('', '_self');win.close();</script>\n")
