@@ -21,7 +21,8 @@ def main():
 
     while not key or not ydisk.LoginAPI(key).getInfo():
         print "Something wrong with the authorization token"
-        answ = raw_input('Would you like to retry authentication? (y/N): ').strip().lower()
+        answ = raw_input(
+            'Would you like to retry authentication? (y/N): ').strip().lower()
         if answ in ['y', "yes"]:
             if os.path.isfile(KEY_FILE):
                 os.remove(KEY_FILE)
