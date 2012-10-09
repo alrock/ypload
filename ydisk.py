@@ -1,15 +1,15 @@
 #!/usr/bin/env python
+
 import sys
 import os
 import requests
 import urlparse
+import BaseHTTPServer
 try:
     from pyxml2obj import XMLin
     from dateutil.parser import parse as dateparse
 except:
     XMLin = None
-import json
-import BaseHTTPServer
 
 
 class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -20,6 +20,7 @@ class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("HTTP/1.0 200 OK")
         self.send_header("Date", self.date_time_string())
         self.send_header("Server", self.version_string())
+        self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.wfile.write("<html><body>\n")
         self.wfile.write("<script>var win = window.open('', '_self');win.close();</script>\n")
@@ -44,10 +45,10 @@ class FileInfo(dict):
 
     def json(self):
         return dict(
-                name = self.name,
-                length = self.length,
-                modified = self.modified.strftime('%s')
-            )
+            name=self.name,
+            length=self.length,
+            modified=self.modified.strftime('%s')
+        )
 
     def __str__(self):
         return '%(name)s (%(href)s) - %(length)s bytes' % self
@@ -70,13 +71,11 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     else:
         code = raw_input('Input your code: ').strip()
 
-    res = requests.post('https://oauth.yandex.ru/token',
-        data = dict(
-            grant_type='authorization_code',
-            code=code,
-            client_id=YD_APP_ID, client_secret=YD_APP_SECRET
-        )
-    )
+    res = requests.post('https://oauth.yandex.ru/token', data=dict(
+        grant_type='authorization_code',
+        code=code,
+        client_id=YD_APP_ID, client_secret=YD_APP_SECRET
+    ))
     if res.status_code != 200:
         raise Exception('Wrong code')
     key = res.json['access_token']
@@ -84,21 +83,23 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
         fl.write(key)
     return key
 
+
 class LoginAPI:
     MP = "https://login.yandex.ru/info?format=json"
+
     def __init__(self, key):
         self.key = "OAuth " + key
 
     def getInfo(self):
-        rq = requests.get(self.MP,
-                headers = {
-                    'Authorization' : self.key,
-                })
+        rq = requests.get(self.MP, headers={
+          'Authorization': self.key,
+        })
         return rq.json
 
 
 class DiskAPI:
     MP = 'https://webdav.yandex.ru'
+
     def __init__(self, key):
         self.key = "OAuth " + key
 
@@ -108,46 +109,37 @@ class DiskAPI:
     def ls(self, directory='/'):
         if not XMLin:
             raise Exception('You need to install pyxml2obj and dateutil')
-        rq = requests.request('PROPFIND', self.url(directory),
-                headers = {
-                    'Authorization' : self.key,
-                    'Accept'        : '*/*',
-                    'Depth'         : '1'
-                })
+        rq = requests.request('PROPFIND', self.url(directory), headers={
+            'Authorization': self.key,
+            'Accept': '*/*',
+            'Depth': '1'
+        })
         res = []
         for line in XMLin(rq.text)['d:response']:
             res.append(FileInfo().fromJSON(line))
         return res
 
     def mkdir(self, path):
-        rq = requests.request('MKCOL',
-                self.url(path),
-                headers = {
-                    'Authorization' : self.key,
-                    'Accept'           : '*/*',
-                }
-            )
+        rq = requests.request('MKCOL', self.url(path), headers={
+            'Authorization': self.key,
+            'Accept': '*/*',
+        })
         return rq.status_code == 201
 
-    def put(self, path, data, tp = 'application/binary'):
-        dt = data
-        rq = requests.request('PUT',
-                self.url(path),
-                data = data,
-                headers = {
-                    'Authorization' : self.key,
-                    'Accept'           : '*/*',
-                    'Expect'           : '100-continue',
-                    'Content-Type'     : tp,
-                }
-            )
+    def put(self, path, data, tp='application/binary'):
+        rq = requests.request('PUT', self.url(path), data=data, headers={
+            'Authorization': self.key,
+            'Accept': '*/*',
+            'Expect': '100-continue',
+            'Content-Type': tp,
+        })
         return rq.status_code == 201
 
     def publish(self, path):
-        rq = requests.post(self.url(path) + '?publish', headers = {
-                    'Authorization' : self.key,
-                    'Accept'           : '*/*',} ,
-                allow_redirects=False)
+        rq = requests.post(self.url(path) + '?publish', allow_redirects=False, headers={
+            'Authorization': self.key,
+            'Accept': '*/*'
+        })
         if rq.status_code != 302:
             raise Exception('Wtf?')
         return rq.headers['location']
@@ -160,6 +152,3 @@ if __name__ == '__main__':
     newname = '/JustShared/' + os.path.basename(fname)
     api.put(newname, open(sys.argv[1], 'r').read())
     print api.publish(newname)
-    # for x in api.ls('/JustShared'):
-    #    print x
-
