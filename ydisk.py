@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import sys
 import os
 import requests
@@ -70,13 +71,11 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     else:
         code = raw_input('Input your code: ').strip()
 
-    res = requests.post('https://oauth.yandex.ru/token',
-                        data=dict(
-                        grant_type='authorization_code',
-                        code=code,
-                        client_id=YD_APP_ID, client_secret=YD_APP_SECRET
-                        )
-                        )
+    res = requests.post('https://oauth.yandex.ru/token', data=dict(
+        grant_type='authorization_code',
+        code=code,
+        client_id=YD_APP_ID, client_secret=YD_APP_SECRET
+    ))
     if res.status_code != 200:
         raise Exception('Wrong code')
     key = res.json['access_token']
@@ -92,10 +91,9 @@ class LoginAPI:
         self.key = "OAuth " + key
 
     def getInfo(self):
-        rq = requests.get(self.MP,
-                          headers={
-                          'Authorization': self.key,
-                          })
+        rq = requests.get(self.MP, headers={
+          'Authorization': self.key,
+        })
         return rq.json
 
 
@@ -111,46 +109,37 @@ class DiskAPI:
     def ls(self, directory='/'):
         if not XMLin:
             raise Exception('You need to install pyxml2obj and dateutil')
-        rq = requests.request('PROPFIND', self.url(directory),
-                              headers={
-                              'Authorization': self.key,
-                              'Accept': '*/*',
-                              'Depth': '1'
-                              })
+        rq = requests.request('PROPFIND', self.url(directory), headers={
+            'Authorization': self.key,
+            'Accept': '*/*',
+            'Depth': '1'
+        })
         res = []
         for line in XMLin(rq.text)['d:response']:
             res.append(FileInfo().fromJSON(line))
         return res
 
     def mkdir(self, path):
-        rq = requests.request('MKCOL',
-                              self.url(path),
-                              headers={
-                              'Authorization': self.key,
-                              'Accept': '*/*',
-                              }
-                              )
+        rq = requests.request('MKCOL', self.url(path), headers={
+            'Authorization': self.key,
+            'Accept': '*/*',
+        })
         return rq.status_code == 201
 
     def put(self, path, data, tp='application/binary'):
-        dt = data
-        rq = requests.request('PUT',
-                              self.url(path),
-                              data=data,
-                              headers={
-                              'Authorization': self.key,
-                              'Accept': '*/*',
-                              'Expect': '100-continue',
-                              'Content-Type': tp,
-                              }
-                              )
+        rq = requests.request('PUT', self.url(path), data=data, headers={
+            'Authorization': self.key,
+            'Accept': '*/*',
+            'Expect': '100-continue',
+            'Content-Type': tp,
+        })
         return rq.status_code == 201
 
     def publish(self, path):
-        rq = requests.post(self.url(path) + '?publish', headers={
+        rq = requests.post(self.url(path) + '?publish', allow_redirects=False, headers={
             'Authorization': self.key,
-            'Accept': '*/*', },
-            allow_redirects=False)
+            'Accept': '*/*'
+        })
         if rq.status_code != 302:
             raise Exception('Wtf?')
         return rq.headers['location']
@@ -163,5 +152,3 @@ if __name__ == '__main__':
     newname = '/JustShared/' + os.path.basename(fname)
     api.put(newname, open(sys.argv[1], 'r').read())
     print api.publish(newname)
-    # for x in api.ls('/JustShared'):
-    #    print x
