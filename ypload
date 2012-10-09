@@ -42,7 +42,7 @@ def main():
             try:
                 tp, enc = mimetypes.guess_type(fname)
                 if not tp:
-                    tp = 'application/binary'
+                    tp = 'application/facepalm'
                 api.put(newname, open(fname, 'r').read(), tp=tp)
                 print api.publish(newname)
             except Exception, e:
