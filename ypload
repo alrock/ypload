@@ -4,6 +4,7 @@ import sys; sys.path.append('requests.egg')
 import os
 import ydisk
 import mimetypes
+import webbrowser
 
 YD_APP_ID = 'cb76e6135dc34947bcf7620e1ab62e54'
 YD_APP_SECRET = 'e4dba0141d734e1d89a5333c26a44f46'
@@ -45,7 +46,9 @@ def main():
             if not tp:
                 tp = 'application/facepalm'
             api.put(newname, open(fname, 'r').read(), tp=tp)
-            os.system('echo ' + api.publish(newname) + '| pbcopy')
+            durl = api.publish(newname)
+            os.system('echo ' + durl + '| pbcopy')
+            webbrowser.open(durl)
         except Exception, e:
             sys.stderr.write('Something wrong with %s\n%s\n' % (fname, e))
             sys.exit(-3)
