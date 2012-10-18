@@ -11,10 +11,6 @@ KEY_FILE = os.path.expanduser('~/.ypload-key')
 
 
 def main():
-    if len(sys.argv) < 2:
-        sys.stderr.write('No filename given\n')
-        sys.exit(-2)
-
     try:
         key = ydisk.getKey(YD_APP_ID, YD_APP_SECRET, KEY_FILE)
     except:
@@ -35,24 +31,25 @@ def main():
             sys.exit(-5)
 
     api = ydisk.DiskAPI(key)
-    api.mkdir('/JustShared')
+    api.mkdir('/JustShared/screenshots')
 
-    for fname in sys.argv[1:]:
-        if os.path.isfile(fname):
-            fname = sys.argv[1]
-            newname = '/JustShared/' + os.path.basename(fname)
-            try:
-                tp, enc = mimetypes.guess_type(fname)
-                if not tp:
-                    tp = 'application/facepalm'
-                api.put(newname, open(fname, 'r').read(), tp=tp)
-                print api.publish(newname)
-            except Exception, e:
-                sys.stderr.write('Something wrong with %s\n%s\n' % (fname, e))
-                sys.exit(-3)
-        else:
-            sys.stderr.write('No such file %s\n' % fname)
-            sys.exit(-4)
+    import tempfile, datetime
+    handle, fname = tempfile.mkstemp(suffix='.png', prefix=datetime.datetime.now().isoformat())
+    os.system('screencapture -i ' + fname)
+    if os.path.isfile(fname):
+        newname = '/JustShared/screenshots/' + os.path.basename(fname)
+        try:
+            tp, enc = mimetypes.guess_type(fname)
+            if not tp:
+                tp = 'application/facepalm'
+            api.put(newname, open(fname, 'r').read(), tp=tp)
+            print api.publish(newname)
+        except Exception, e:
+            sys.stderr.write('Something wrong with %s\n%s\n' % (fname, e))
+            sys.exit(-3)
+    else:
+        sys.stderr.write('No such file %s\n' % fname)
+        sys.exit(-4)
 
 
 if __name__ == '__main__':
