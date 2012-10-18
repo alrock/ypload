@@ -32,6 +32,7 @@ def main():
             sys.exit(-5)
 
     api = ydisk.DiskAPI(key)
+    api.mkdir('/JustShared')
     api.mkdir('/JustShared/screenshots')
 
     import tempfile, datetime
