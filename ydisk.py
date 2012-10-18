@@ -75,7 +75,7 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
         grant_type='authorization_code',
         code=code,
         client_id=YD_APP_ID, client_secret=YD_APP_SECRET
-    ))
+    ), verify=False)
     if res.status_code != 200:
         raise Exception('Wrong code')
     key = res.json['access_token']
@@ -93,7 +93,7 @@ class LoginAPI:
     def getInfo(self):
         rq = requests.get(self.MP, headers={
           'Authorization': self.key,
-        })
+        }, verify=False)
         return rq.json
 
 
@@ -113,7 +113,7 @@ class DiskAPI:
             'Authorization': self.key,
             'Accept': '*/*',
             'Depth': '1'
-        })
+        }, verify=False)
         res = []
         for line in XMLin(rq.text)['d:response']:
             res.append(FileInfo().fromJSON(line))
@@ -123,7 +123,7 @@ class DiskAPI:
         rq = requests.request('MKCOL', self.url(path), headers={
             'Authorization': self.key,
             'Accept': '*/*',
-        })
+        }, verify=False)
         return rq.status_code == 201
 
     def put(self, path, data, tp='application/binary'):
@@ -132,14 +132,14 @@ class DiskAPI:
             'Accept': '*/*',
             'Expect': '100-continue',
             'Content-Type': tp,
-        })
+        }, verify=False)
         return rq.status_code == 201
 
     def publish(self, path):
         rq = requests.post(self.url(path) + '?publish', allow_redirects=False, headers={
             'Authorization': self.key,
             'Accept': '*/*'
-        })
+        }, verify=False)
         if rq.status_code != 302:
             raise Exception('Wtf?')
         return rq.headers['location']
