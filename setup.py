@@ -7,8 +7,8 @@ Usage:
 
 from setuptools import setup
 
-APP = ['ypload.py']
-DATA_FILES = ['ydisk.py', 'requests.egg']
+APP = ['Yarrr.py']
+DATA_FILES = []
 OPTIONS = {'argv_emulation': False, 'iconfile': '/Users/bobuk/Downloads/tarelka2.icns'}
 
 setup(
