@@ -1,6 +1,10 @@
 #!/usr/bin/python
-import sys#; sys.path.append('requests.egg')
 import os
+import sys
+sys.path.append(
+    os.path.join(
+        os.path.dirname(sys.argv[0]),
+        'lib/python2.7/'))
 import mimetypes
 import webbrowser
 
