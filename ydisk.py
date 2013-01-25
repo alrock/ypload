@@ -2,9 +2,13 @@
 
 import sys
 import os
-import requests
+import tempfile
+import gzip
 import urlparse
 import BaseHTTPServer
+
+import requests
+
 try:
     from pyxml2obj import XMLin
     from dateutil.parser import parse as dateparse
