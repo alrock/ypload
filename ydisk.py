@@ -136,12 +136,34 @@ class DiskAPI:
         return rq.status_code == 201
 
     def put(self, path, data, tp='application/binary'):
-        rq = requests.request('PUT', self.url(path), data=data, headers={
+        headers = {
             'Authorization': self.key,
             'Accept': '*/*',
             'Expect': '100-continue',
             'Content-Type': tp,
-        })
+        }
+        if requests.__version__.split('.') >= [1, 1, 0]:
+            # This is a dummy solutino for gzizpped and chunked upload
+            headers['Content-Encoding'] = 'gzip'
+            headers['Transfer-Encoding'] = 'chunked'
+
+            def gzipped_data_generator(dt):
+                with tempfile.TemporaryFile(mode="w+b") as gfl:
+                    zip = gzip.GzipFile(mode='wb', fileobj=gfl)
+                    zip.write(dt)
+                    zip.close()
+                    gfl.seek(0)
+                    while True:
+                        st = gfl.read(1024)
+                        if st:
+                            yield st
+                        else:
+                            break
+
+            data = gzipped_data_generator(data)
+
+        rq = requests.request(
+            'PUT', self.url(path), data=data, headers=headers)
         return rq.status_code == 201
 
     def publish(self, path):
