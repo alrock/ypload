@@ -11,6 +11,8 @@ try:
 except:
     XMLin = None
 
+OAYR = "https://oauth.yandex.ru/"
+
 
 class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -23,7 +25,9 @@ class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.wfile.write("<html><body>\n")
-        self.wfile.write("<script>var win = window.open('', '_self');win.close();</script>\n")
+        self.wfile.write("<script>" +
+                         "var win = window.open('', '_self');win.close();" +
+                         "</script>\n")
         self.wfile.write("Your code is %s" % YploadRequestHandler._code)
         self.wfile.write("</body></html>\n")
         self.finish()
@@ -60,7 +64,8 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     if os.path.isfile(keyfile):
         return open(keyfile, 'r').read()
     import webbrowser
-    webbrowser.open_new('https://oauth.yandex.ru/authorize?response_type=code&client_id=' + YD_APP_ID)
+    webbrowser.open_new(
+        OAYR + 'authorize?response_type=code&client_id=' + YD_APP_ID)
 
     YploadRequestHandler._code = None
     httpd = BaseHTTPServer.HTTPServer(('', 8714), YploadRequestHandler)
@@ -71,7 +76,7 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     else:
         code = raw_input('Input your code: ').strip()
 
-    res = requests.post('https://oauth.yandex.ru/token', data=dict(
+    res = requests.post(OAYR + 'token', data=dict(
         grant_type='authorization_code',
         code=code,
         client_id=YD_APP_ID, client_secret=YD_APP_SECRET
@@ -92,7 +97,7 @@ class LoginAPI:
 
     def getInfo(self):
         rq = requests.get(self.MP, headers={
-          'Authorization': self.key,
+            'Authorization': self.key,
         })
         return rq.json
 
@@ -136,10 +141,12 @@ class DiskAPI:
         return rq.status_code == 201
 
     def publish(self, path):
-        rq = requests.post(self.url(path) + '?publish', allow_redirects=False, headers={
-            'Authorization': self.key,
-            'Accept': '*/*'
-        })
+        rq = requests.post(
+            self.url(path) + '?publish', allow_redirects=False,
+            headers={
+                'Authorization': self.key,
+                'Accept': '*/*'
+            })
         if rq.status_code != 302:
             raise Exception('Wtf?')
         return rq.headers['location']
