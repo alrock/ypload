@@ -5,17 +5,18 @@ import os
 import tempfile
 import gzip
 import urlparse
+import xml.etree.ElementTree as et
 import BaseHTTPServer
 
 import requests
 
 try:
-    from pyxml2obj import XMLin
     from dateutil.parser import parse as dateparse
 except:
-    XMLin = None
+    dateparse = None
 
 OAYR = "https://oauth.yandex.ru/"
+D = '{DAV:}'
 
 
 class YploadRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -42,13 +43,20 @@ class FileInfo(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-    def fromJSON(self, j):
-        self.href = j['d:href']
-        prop = j['d:propstat']['d:prop']
-        self.name = prop['d:displayname']
-        self.length = prop['d:getcontentlength']
-        self.modified = dateparse(prop['d:getlastmodified'])
-        self.created = dateparse(prop['d:creationdate'])
+    def fromXML(self, j):
+        [href, propstat] = j.getchildren()
+        self.href = href.text
+        [status, prop] = propstat.getchildren()
+        for x in prop:
+            tag = x.tag.replace(D, '')
+            if   tag == 'displayname':
+                self.name = x.text
+            elif tag == 'getcontentlength':
+                self.length = int(x.text)
+            elif tag == 'getlastmodified':
+                self.modified = dateparse(x.text)
+            elif tag == 'creationdate':
+                self.created = dateparse(x.text)
         return self
 
     def json(self):
@@ -115,30 +123,35 @@ class DiskAPI:
     def url(self, d):
         return self.MP + d
 
+    def request(self, method, url=None, data=None, headers=None):
+        if not headers:
+            headers = {}
+        if 'Accept' not in headers:
+            headers['Accept'] = '*/*'
+        headers['Authorization'] = self.key
+
+        return requests.request(
+            method, url=self.url(url), headers=headers, data=data
+        )
+
     def ls(self, directory='/'):
-        if not XMLin:
-            raise Exception('You need to install pyxml2obj and dateutil')
-        rq = requests.request('PROPFIND', self.url(directory), headers={
-            'Authorization': self.key,
-            'Accept': '*/*',
+        if not dateparse:
+            raise Exception('You need to install dateutil module')
+        rq = self.request('PROPFIND', directory, headers={
             'Depth': '1'
         })
         res = []
-        for line in XMLin(rq.text)['d:response']:
-            res.append(FileInfo().fromJSON(line))
+        xml = et.fromstring(rq.text)
+        for line in xml.findall('{DAV:}response'):
+            res.append(FileInfo().fromXML(line))
         return res
 
     def mkdir(self, path):
-        rq = requests.request('MKCOL', self.url(path), headers={
-            'Authorization': self.key,
-            'Accept': '*/*',
-        })
+        rq = self.request('MKCOL', path)
         return rq.status_code == 201
 
     def put(self, path, data, tp='application/binary'):
         headers = {
-            'Authorization': self.key,
-            'Accept': '*/*',
             'Expect': '100-continue',
             'Content-Type': tp,
         }
@@ -162,8 +175,9 @@ class DiskAPI:
 
             data = gzipped_data_generator(data)
 
-        rq = requests.request(
-            'PUT', self.url(path), data=data, headers=headers)
+        rq = self.request(
+            'PUT', path, data=data, headers=headers
+        )
         return rq.status_code == 201
 
     def publish(self, path):
