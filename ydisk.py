@@ -95,7 +95,7 @@ def getKey(YD_APP_ID, YD_APP_SECRET, keyfile):
     ))
     if res.status_code != 200:
         raise Exception('Wrong code')
-    key = res.json['access_token']
+    key = res.json()['access_token']
     with open(keyfile, 'w') as fl:
         fl.write(key)
     return key
@@ -111,7 +111,7 @@ class LoginAPI:
         rq = requests.get(self.MP, headers={
             'Authorization': self.key,
         })
-        return rq.json
+        return rq.json()
 
 
 class DiskAPI:
